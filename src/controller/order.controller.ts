@@ -50,6 +50,88 @@ const createOrder = async (req: Request, res: Response) => {
   }
 };
 
+const getOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find()
+      .populate("event", "title date price")
+      .populate("user", "name email");
+
+    if (!orders) {
+      return res.status(404).json({
+        success: false,
+        message: "Orders not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Orders fetched successfully.",
+      data: orders,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Error on fetching orders.",
+      error: err.message,
+    });
+  }
+};
+
+const getMyOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find({ user: req.user?.id })
+      .populate("event", "title date price")
+      .populate("user", "name email");
+
+    if (!orders) {
+      return res.status(404).json({
+        success: false,
+        message: "Orders not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Orders fetched successfully.",
+      data: orders,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Error on fetching orders.",
+      error: err.message,
+    });
+  }
+};
+
+const updateOrder = async (req: Request, res: Response) => {
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully.",
+      data: order,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Error on updating order status.",
+      error: err.message,
+    });
+  }
+};
+
 const orderById = async (req: Request, res: Response) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -122,5 +204,8 @@ const deleteOrder = async (req: Request, res: Response) => {
 export const orderController = {
   createOrder,
   orderById,
-  deleteOrder
+  deleteOrder,
+  getOrders,
+  getMyOrders,
+  updateOrder
 };

@@ -12,4 +12,10 @@ router.post("/login", userController.login);
 // get all users
 router.get("/", userController.getUsers)
 
+// update users
+router.patch("/", userController.updateUsers);
+
+// delete users
+router.delete("/", userController.deleteUsers)
+
 export const UserRoutes = router;

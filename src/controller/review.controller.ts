@@ -78,10 +78,7 @@ const getReviewById = async (req: Request, res: Response) => {
 
 const updateReview = async (req: Request, res: Response) => {
   try {
-    const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const review = await Review.findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -90,10 +87,25 @@ const updateReview = async (req: Request, res: Response) => {
       });
     }
 
+    if (
+      review.user.toString() !== req.user?.id &&
+      req.user?.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not allowed to update this review",
+      });
+    }
+
+    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
     res.status(200).json({
       success: true,
       message: "Review updated successfully.",
-      data: review,
+      data: updatedReview,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -106,7 +118,7 @@ const updateReview = async (req: Request, res: Response) => {
 
 const deleteReview = async (req: Request, res: Response) => {
   try {
-    const review = await Review.findByIdAndDelete(req.params.id);
+    const review = await Review.findById(req.params.id);
 
     if (!review) {
       return res.status(404).json({
@@ -114,6 +126,18 @@ const deleteReview = async (req: Request, res: Response) => {
         message: "Review not found",
       });
     }
+
+    if (
+      review.user.toString() !== req.user?.id &&
+      req.user?.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not allowed to delete this review",
+      });
+    }
+
+    await Review.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,

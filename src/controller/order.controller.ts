@@ -7,16 +7,22 @@ const createOrder = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { event: eventId, quantity } = req.body;
 
-    const event = await Event.findById(eventId);
+    // Atomic update to prevent race conditions during concurrent bookings
+    const event = await Event.findOneAndUpdate(
+      { _id: eventId, capacity: { $gte: quantity } },
+      { $inc: { capacity: -quantity } },
+      { new: true }
+    );
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found",
-      });
-    }
-
-    if (event.capacity < quantity) {
+      // Check if event exists but full, or entirely missing
+      const existingEvent = await Event.findById(eventId);
+      if (!existingEvent) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
       return res.status(400).json({
         success: false,
         message: "Not enough seats available",
@@ -32,9 +38,6 @@ const createOrder = async (req: Request, res: Response) => {
       totalPrice,
       orderStatus: "pending",
     });
-
-    event.capacity -= quantity;
-    await event.save();
 
     res.status(201).json({
       success: true,
@@ -52,6 +55,13 @@ const createOrder = async (req: Request, res: Response) => {
 
 const getOrders = async (req: Request, res: Response) => {
   try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Admin access required",
+      });
+    }
+
     const orders = await Order.find()
       .populate("event", "title date price")
       .populate("user", "name email");
@@ -106,10 +116,14 @@ const getMyOrders = async (req: Request, res: Response) => {
 
 const updateOrder = async (req: Request, res: Response) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Admin access required",
+      });
+    }
+
+    const order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -118,10 +132,20 @@ const updateOrder = async (req: Request, res: Response) => {
       });
     }
 
+    // Refund capacity if order is being cancelled
+    if (req.body.orderStatus === "cancelled" && order.orderStatus !== "cancelled") {
+      await Event.findByIdAndUpdate(order.event, { $inc: { capacity: order.quantity } });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
     res.status(200).json({
       success: true,
       message: "Order status updated successfully.",
-      data: order,
+      data: updatedOrder,
     });
   } catch (err: any) {
     res.status(500).json({
@@ -145,9 +169,17 @@ const orderById = async (req: Request, res: Response) => {
       });
     }
 
+    const orderUserId = (order.user as any)._id.toString();
+    if (orderUserId !== req.user?.id && req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not allowed to view this order",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: "Order by id successfully.",
+      message: "Order fetched successfully.",
       data: order,
     });
   } catch (err: any) {
@@ -179,10 +211,12 @@ const deleteOrder = async (req: Request, res: Response) => {
       });
     }
 
-    const event = await Event.findById(order.event);
-    if (event) {
-      event.capacity += order.quantity;
-      await event.save();
+    if (order.orderStatus !== "cancelled") {
+      const event = await Event.findById(order.event);
+      if (event) {
+        event.capacity += order.quantity;
+        await event.save();
+      }
     }
 
     await Order.findByIdAndDelete(req.params.id);

@@ -8,13 +8,17 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
-    const token = req.headers.authorization;
+    let token = req.headers.authorization;
 
     if (!token) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized"
       });
+    }
+
+    if (token.startsWith("Bearer ")) {
+      token = token.split(" ")[1];
     }
 
     // verify token

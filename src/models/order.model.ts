@@ -8,7 +8,7 @@ const orderSchema = new Schema<TOrder>({
   event: { type: Schema.Types.ObjectId, ref: Event, required: true },
   quantity: { type: Number, required: true, min: 1 },
   totalPrice: {type: Number, required: true},
-  orderStatus: {type: String, enum: ["pending", "confired", "cancelled"], default: "pending"}
+  orderStatus: {type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending"}
 },
   {
   timestamps: true

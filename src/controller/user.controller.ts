@@ -104,7 +104,7 @@ const getUsers = async (req: Request, res: Response) => {
 
 const updateUsers = async (req: Request, res: Response) => {
   try {
-    const updatedValue = await User.findByIdAndUpdate(req.params, req.body, {
+    const updatedValue = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -132,7 +132,7 @@ const updateUsers = async (req: Request, res: Response) => {
 
 const deleteUsers = async (req: Request, res: Response) => {
   try {
-    const deletedValue = await User.findByIdAndDelete(req.params);
+    const deletedValue = await User.findByIdAndDelete(req.params.id);
     if (!deletedValue) {
       return res.status(400).json({
         success: false,

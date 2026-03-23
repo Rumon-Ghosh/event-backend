@@ -8,7 +8,7 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
-    let token = req.headers.authorization;
+    let token = req.headers.authorization || req.cookies.token;
 
     if (!token) {
       return res.status(401).json({
@@ -28,7 +28,7 @@ export const authMiddleware = (
     ) as any;
 
     // ✅ ADD HERE
-    req.user = {
+    (req as any).user = {
       id: decoded.userId,
       role: decoded.role
     };

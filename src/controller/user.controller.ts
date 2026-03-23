@@ -4,6 +4,46 @@ import jwt, { Secret } from "jsonwebtoken";
 import config from "../config";
 import bcrypt from "bcrypt";
 
+const getMe = async (req: Request, res: Response) => {
+  try {
+    let token = req.headers.authorization || req.cookies.token;
+
+    if (!token) {
+      return res.status(200).json({
+        success: false,
+        message: "Not logged in",
+        data: null,
+      });
+    }
+
+    if (token.startsWith("Bearer ")) {
+      token = token.split(" ")[1];
+    }
+
+    const decoded = jwt.verify(token, config.jwt_secret as string) as any;
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      return res.status(200).json({
+        success: false,
+        message: "User not found",
+        data: null,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (err: any) {
+    res.status(200).json({
+      success: false,
+      message: "Invalid session",
+      data: null,
+    });
+  }
+};
+
 const register = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -24,6 +64,13 @@ const register = async (req: Request, res: Response) => {
     );
 
     const userResponse = savedUser.toObject();
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(201).json({
       success: true,
@@ -69,6 +116,13 @@ const login = async (req: Request, res: Response) => {
     );
 
     const userResponse = getUser.toObject();
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(200).json({
       success: true,
@@ -153,10 +207,33 @@ const deleteUsers = async (req: Request, res: Response) => {
   }
 };
 
+const logout = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User logged out successfully.",
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Error on logout.",
+      error: err.message,
+    });
+  }
+};
+
 export const userController = {
   register,
   login,
   getUsers,
   updateUsers,
-  deleteUsers
+  deleteUsers,
+  logout,
+  getMe
 };

@@ -58,9 +58,29 @@ const getSingleEvent = async (req: Request, res: Response) => {
   }
 }
 
+const getMyEvents = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const myEvents = await Event.find({ createdBy: userId });
+
+    res.status(200).json({
+      success: true,
+      message: "My Events fetched successfully.",
+      data: myEvents
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch my events.",
+      error: err.message
+    });
+  }
+};
+
+
 const updateEvent = async (req: Request, res: Response) => {
   try {
-    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { returnDocument: "after", runValidators: true });
 
     if (!updatedEvent) {
       return res.status(400).json({
@@ -92,6 +112,7 @@ const deleteEvent = async (req: Request, res: Response) => {
         message: "Cannot Delete Event."
       })
     }
+    console.log("Deleted Event:", eventDelete);
 
     res.status(200).json({
       success: true, 
@@ -112,6 +133,7 @@ export const eventController = {
   createEvent,
   getEvents,
   getSingleEvent,
+  getMyEvents,
   updateEvent,
   deleteEvent
 }

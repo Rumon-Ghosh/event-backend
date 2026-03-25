@@ -5,13 +5,13 @@ import { Event } from "../models/event.model";
 const createOrder = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { event: eventId, quantity } = req.body;
+    const { eventId, quantity } = req.body;
 
     // Atomic update to prevent race conditions during concurrent bookings
     const event = await Event.findOneAndUpdate(
       { _id: eventId, capacity: { $gte: quantity } },
       { $inc: { capacity: -quantity } },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!event) {
@@ -138,7 +138,7 @@ const updateOrder = async (req: Request, res: Response) => {
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 

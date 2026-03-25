@@ -9,7 +9,6 @@ export interface TEvent {
   capacity: number;
   image: string;
   createdBy: Types.ObjectId;
-  status: "pending" | "approved";
   createdAt?: Date;
   updatedAt?: Date
 }

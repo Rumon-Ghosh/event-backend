@@ -159,7 +159,7 @@ const getUsers = async (req: Request, res: Response) => {
 const updateUsers = async (req: Request, res: Response) => {
   try {
     const updatedValue = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 

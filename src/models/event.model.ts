@@ -11,9 +11,6 @@ const eventSchema = new Schema<TEvent>({
   capacity: { type: Number, required: true, default: 50 },
   image: { type: String, required: true },
   createdBy: { type: Schema.Types.ObjectId, ref: User, required: true },
-  status: {
-    type: String, enum: ["pending", "approved"], default: "pending"
-  }
 },
   {
     timestamps: true

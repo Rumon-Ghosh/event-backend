@@ -141,7 +141,13 @@ const login = async (req: Request, res: Response) => {
 
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find({role: {$nin: ["admin"]}}).select("-password");
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbiden access denied.",
+      });
+    }
     res.status(200).json({
       success: true,
       message: "Users fatched successfully",
@@ -194,16 +200,16 @@ const deleteUsers = async (req: Request, res: Response) => {
       });
     }
     res.status(200).json({
-      success: true, 
+      success: true,
       message: "User deleted successfully.",
-      data: deletedValue
-    })
+      data: deletedValue,
+    });
   } catch (err: any) {
     res.status(500).json({
       success: false,
       message: "Error on delete user",
-      error: err.message
-    })
+      error: err.message,
+    });
   }
 };
 
@@ -235,5 +241,5 @@ export const userController = {
   updateUsers,
   deleteUsers,
   logout,
-  getMe
+  getMe,
 };

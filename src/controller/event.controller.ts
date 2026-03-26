@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Event } from "../models/event.model";
+import { Order } from "../models/order.model";
 
 const createEvent = async (req: Request, res: Response) => {
   try {
@@ -112,18 +113,20 @@ const deleteEvent = async (req: Request, res: Response) => {
         message: "Cannot Delete Event."
       })
     }
-    console.log("Deleted Event:", eventDelete);
+
+    // Delete all orders related to this event
+    const deletedOrders = await Order.deleteMany({ event: req.params.id });
 
     res.status(200).json({
-      success: true, 
-      message: "Event Deleted successfully.",
+      success: true,
+      message: "Event and related orders deleted successfully.",
       data: eventDelete
     })
 
   } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: 'Failed to update event',
+      message: 'Failed to delete event',
       error: err.message,
     });
   }

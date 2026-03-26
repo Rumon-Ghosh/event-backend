@@ -17,12 +17,12 @@ router.post("/logout", userController.logout);
 router.get("/me", userController.getMe);
 
 // get all users
-router.get("/", userController.getUsers)
+router.get("/", authMiddleware, userController.getUsers)
 
 // update users
-router.patch("/", userController.updateUsers);
+router.patch("/:id", userController.updateUsers);
 
 // delete users
-router.delete("/", userController.deleteUsers)
+router.delete("/:id", userController.deleteUsers)
 
 export const UserRoutes = router;

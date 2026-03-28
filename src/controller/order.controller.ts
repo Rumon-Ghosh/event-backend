@@ -114,7 +114,7 @@ const getMyOrders = async (req: Request, res: Response) => {
   }
 };
 
-const updateOrder = async (req: Request, res: Response) => {
+const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     if (req.user?.role !== "admin") {
       return res.status(403).json({
@@ -155,6 +155,78 @@ const updateOrder = async (req: Request, res: Response) => {
     });
   }
 };
+
+const updateOrderQuantity = async (req: Request, res: Response) => {
+  try {
+    const orderId = req.params.id;
+    const { quantity: newQuantity } = req.body;
+
+    const order = await Order.findById(orderId).populate("event");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Ownership check: Only the order owner or an admin can update
+    if (order.user.toString() !== req.user?.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not allowed to update this order",
+      });
+    }
+
+    const event = order.event as any;
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated event not found",
+      });
+    }
+
+    const diff = newQuantity - order.quantity;
+
+    // Atomic update to event capacity to ensure availability
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: event._id, capacity: { $gte: diff } },
+      { $inc: { capacity: -diff } },
+      { returnDocument: "after" }
+    );
+
+    if (!updatedEvent) {
+      return res.status(400).json({
+        success: false,
+        message: "Not enough seats available to update quantity",
+      });
+    }
+
+    const newTotalPrice = newQuantity * event.price;
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { quantity: newQuantity, totalPrice: newTotalPrice },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Order quantity updated successfully.",
+      data: updatedOrder,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Error on updating order quantity.",
+      error: err.message,
+    });
+  }
+};
+
 
 const orderById = async (req: Request, res: Response) => {
   try {
@@ -241,5 +313,6 @@ export const orderController = {
   deleteOrder,
   getOrders,
   getMyOrders,
-  updateOrder
+  updateOrderStatus,
+  updateOrderQuantity
 };

@@ -38,7 +38,7 @@ const getEvents = async (req: Request, res: Response) => {
 
 const getLatestEvents = async (req: Request, res: Response) => {
   try {
-    const latestEvents = await Event.find().sort({ createdAt: -1 }).limit(6);
+    const latestEvents = await Event.find().sort({ createdAt: -1 }).limit(4);
     res.status(200).json({
       success: true,
       message: "Latest Events fetched successfully.",
@@ -79,7 +79,7 @@ const getSingleEvent = async (req: Request, res: Response) => {
 const getMyEvents = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const myEvents = await Event.find({ createdBy: userId });
+    const myEvents = await Event.find({ createdBy: userId }).sort({createdAt: -1});
 
     res.status(200).json({
       success: true,

@@ -12,7 +12,9 @@ route.get("/my-orders", authMiddleware, orderController.getMyOrders);
 
 route.get("/:id", authMiddleware, orderController.orderById);
 
-route.put("/:id", authMiddleware, orderController.updateOrder);
+route.put("/:id/status", authMiddleware, orderController.updateOrderStatus);
+
+route.put("/:id/quantity", authMiddleware, orderController.updateOrderQuantity);
 
 route.delete("/:id", authMiddleware, orderController.deleteOrder);
 

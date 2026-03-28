@@ -5,6 +5,7 @@ import { EventRoutes } from './event.route';
 import { OrderRoute } from './order.route';
 import { ReviewRoute } from './review.route';
 import { UploadRoute } from './upload.route';
+import { AnalyticsRoute } from './analytics.route';
 
 const router = express.Router();
 
@@ -28,6 +29,10 @@ const moduleRoutes = [
   {
     path: "/upload",
     route: UploadRoute,
+  },
+  {
+    path: "/analytics",
+    route: AnalyticsRoute,
   },
   // {
   //   path: '/ai',

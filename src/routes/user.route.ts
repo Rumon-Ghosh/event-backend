@@ -20,7 +20,7 @@ router.get("/me", userController.getMe);
 router.get("/", authMiddleware, userController.getUsers)
 
 // update users
-router.patch("/:id", userController.updateUsers);
+router.patch("/:id", authMiddleware, userController.updateUsers);
 
 // delete users
 router.delete("/:id", userController.deleteUsers)

@@ -21,7 +21,7 @@ const createEvent = async (req: Request, res: Response) => {
 
 const getEvents = async (req: Request, res: Response) => {
   try {
-    const allEvents = await Event.find();
+    const allEvents = await Event.find().sort({ createdAt: -1 });
     res.status(200).json({
       success: true, 
       message: "All Event Fatched Successfully.",
@@ -33,6 +33,23 @@ const getEvents = async (req: Request, res: Response) => {
       message: "Failed To Fatche All Event",
       error: err.message
     })
+  }
+}
+
+const getLatestEvents = async (req: Request, res: Response) => {
+  try {
+    const latestEvents = await Event.find().sort({ createdAt: -1 }).limit(6);
+    res.status(200).json({
+      success: true,
+      message: "Latest Events fetched successfully.",
+      data: latestEvents
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch latest events.",
+      error: err.message
+    });
   }
 }
 
@@ -135,6 +152,7 @@ const deleteEvent = async (req: Request, res: Response) => {
 export const eventController = {
   createEvent,
   getEvents,
+  getLatestEvents,
   getSingleEvent,
   getMyEvents,
   updateEvent,

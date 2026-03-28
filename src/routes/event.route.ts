@@ -8,6 +8,8 @@ router.post("/", eventController.createEvent);
 
 router.get("/", eventController.getEvents);
 
+router.get("/latest", eventController.getLatestEvents);
+
 router.get("/my-events", authMiddleware, eventController.getMyEvents);
 
 router.get("/:id", eventController.getSingleEvent);

@@ -4,8 +4,7 @@ import { reviewController } from "../controller/review.controller";
 const route = express.Router();
 
 route.post("/", authMiddleware, reviewController.createReview);
-route.get("/", authMiddleware, reviewController.getReviews);
-route.get("/:id", authMiddleware, reviewController.getReviewById);
+route.get("/:eventId", authMiddleware, reviewController.getReviewsByEventId);
 route.put("/:id", authMiddleware, reviewController.updateReview);
 route.delete("/:id", authMiddleware, reviewController.deleteReview);
 

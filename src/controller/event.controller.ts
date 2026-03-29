@@ -21,16 +21,35 @@ const createEvent = async (req: Request, res: Response) => {
 
 const getEvents = async (req: Request, res: Response) => {
   try {
-    const allEvents = await Event.find().sort({ createdAt: -1 });
+    const { search, sortBy, page = "1", limit = "9" } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    let sortOption = {};
+    if(!sortBy) {
+      sortOption = { createdAt: -1 };
+    } else if (sortBy === "lowToHigh") {
+      sortOption = { price: 1 };
+    } else if (sortBy === "highToLow") {
+      sortOption = { price: -1 };
+    }
+    const query: any = {};
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+    const allEvents = await Event.find(query).sort(sortOption).skip(skip).limit(limitNum);
+    const totalEvents = await Event.countDocuments(query);
     res.status(200).json({
       success: true, 
-      message: "All Event Fatched Successfully.",
-      data: allEvents
+      message: "All Event Fetched Successfully.",
+      data: allEvents,
+      totalEvents
     })
   } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Failed To Fatche All Event",
+      message: "Failed To Fetch All Event",
       error: err.message
     })
   }

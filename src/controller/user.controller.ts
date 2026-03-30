@@ -141,7 +141,16 @@ const login = async (req: Request, res: Response) => {
 
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({role: {$nin: ["admin"]}}).select("-password");
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const users = await User.find({role: {$nin: ["admin"]}})
+    .sort({createdAt: -1})
+    .select("-password")
+    .skip(skip)
+    .limit(limit);
+    const totalUsers = await User.countDocuments({role: {$nin: ["admin"]}});
+    const totalPages = Math.ceil(totalUsers / limit);
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
@@ -152,6 +161,8 @@ const getUsers = async (req: Request, res: Response) => {
       success: true,
       message: "Users fatched successfully",
       data: users,
+      totalUsers,
+      totalPages,
     });
   } catch (err: any) {
     res.status(500).json({

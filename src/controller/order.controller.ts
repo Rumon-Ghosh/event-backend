@@ -62,9 +62,18 @@ const getOrders = async (req: Request, res: Response) => {
       });
     }
 
-    const orders = await Order.find()
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find().sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("event", "title date price")
       .populate("user", "name email");
+
+    const totalOrders = await Order.countDocuments();
+    const totalPages = Math.ceil(totalOrders / limit);
 
     if (!orders) {
       return res.status(404).json({
@@ -77,6 +86,8 @@ const getOrders = async (req: Request, res: Response) => {
       success: true,
       message: "Orders fetched successfully.",
       data: orders,
+      totalPages,
+      totalOrders,
     });
   } catch (err: any) {
     res.status(500).json({

@@ -4,7 +4,7 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.post("/", eventController.createEvent);
+router.post("/", authMiddleware, eventController.createEvent);
 
 router.get("/", eventController.getEvents);
 

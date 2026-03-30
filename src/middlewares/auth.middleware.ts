@@ -13,7 +13,7 @@ export const authMiddleware = (
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized"
+        message: "No token provided. Unauthorized."
       });
     }
 
@@ -27,17 +27,24 @@ export const authMiddleware = (
       config.jwt_secret as string
     ) as any;
 
-    // ✅ ADD HERE
+    if (!decoded) {
+      return res.status(401).json({
+        success: false,
+        message: "Failed to verify token."
+      });
+    }
+
     (req as any).user = {
       id: decoded.userId,
       role: decoded.role
     };
 
     next();
-  } catch (err) {
+  } catch (err: any) {
     res.status(401).json({
       success: false,
-      message: "Invalid token"
+      message: "Authentication failed",
+      error: err.message
     });
   }
 };

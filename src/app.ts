@@ -5,18 +5,20 @@ import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
-// parser
-app.use(express.json());
-app.use(cookieParser());
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://event-era-pearl.vercel.app", // Common fallback/placeholder
+      "http://localhost:5173",
+      "https://event-era-pearl.vercel.app",
     ],
     credentials: true,
   })
 );
+
+// parser
+app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api/v1", router)
 

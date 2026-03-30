@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
 import config from '../config';
 
+if (!config.cloudinary_cloud_name || !config.cloudinary_api_key || !config.cloudinary_api_secret) {
+  console.error("CRITICAL: Cloudinary configuration is missing. Check your environment variables.");
+}
+
 cloudinary.config({
   cloud_name: config.cloudinary_cloud_name,
   api_key: config.cloudinary_api_key,
